@@ -148,6 +148,16 @@ public class Menu {
             return;
         }
 
+        if (type_abo == type_abonnement.SANS_ENGAGEMENT) {
+            System.out.println("Souhaitez-vous définir une date de fin ? (oui/non)");
+            String choix = scanner.nextLine();
+            if (choix.equalsIgnoreCase("oui")) {
+                System.out.println("Entrez la date de fin (yyyy-MM-dd) : ");
+                String dateFinStr = scanner.nextLine();
+                dateFin = Optional.of(LocalDate.parse(dateFinStr, DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+            }
+        }
+
         // create and applicate variables in service
         try {
             DBconnection dbConnection = DBconnection.getInstance();

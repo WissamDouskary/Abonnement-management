@@ -6,10 +6,7 @@ import entity.Abonnement;
 import entity.AbonnementAvecEngagement;
 import entity.AbonnementSansEngagement;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.List;
 
 public class AbonnementDAOImpl implements AbonnementDAO{
@@ -65,7 +62,34 @@ public class AbonnementDAOImpl implements AbonnementDAO{
 
     @Override
     public void update(Abonnement abonnement) {
+        String sql = "UPDATE abonnement SET nom_service = ? , montant_mensuel = ? , date_debut = ? , date_fin = ? , statut = ? , type_abonnement = ? , duree_engagement_mois = ? WHERE id = ?";
 
+        //create statement
+        try(PreparedStatement st = conn.prepareStatement(sql)){
+            st.setString(1, abonnement.getNomService());
+            st.setDouble(2, abonnement.getMontantMensuel());
+            st.setDate(3, Date.valueOf(abonnement.getDateDebut()));
+
+            if(abonnement.getDatefin() != null){
+                st.setDate(4, Date.valueOf(abonnement.getDatefin()));
+            }else{
+                st.setNull(4, Types.DATE);
+            }
+
+            st.setObject(5, abonnement.getStatus().name(), java.sql.Types.OTHER);
+
+            if(abonnement instanceof AbonnementAvecEngagement){
+                AbonnementAvecEngagement abonnementAvecEngagement = (AbonnementAvecEngagement) abonnement;
+                st.setObject(6, abonnementAvecEngagement.getType_abonnement().name(), Types.OTHER);
+            }
+        }
+        catch (SQLException e){
+            System.err.println("SQL error " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
