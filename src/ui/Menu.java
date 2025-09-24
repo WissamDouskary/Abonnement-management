@@ -5,10 +5,12 @@ import java.time.format.DateTimeFormatter;
 
 import config.DBconnection;
 import dao.impl.AbonnementDAOImpl;
+import entity.Abonnement;
 import entity.enums.*;
 import services.AbonnementService;
 
 import java.util.InputMismatchException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -178,7 +180,8 @@ public class Menu {
     }
 
     private void modifierAbonnement() {
-        System.out.println("Modification d'un abonnement...");
+        System.out.println("Modification d'un abonnement ========================");
+
     }
 
     private void supprimerAbonnement() {
@@ -186,7 +189,17 @@ public class Menu {
     }
 
     private void consulterAbonnements() {
-        System.out.println("Consultation de la liste des abonnements...");
+        System.out.println("la liste des abonnements ========================");
+        DBconnection dbConnection = DBconnection.getInstance();
+        AbonnementService abonnementService = new AbonnementService(new AbonnementDAOImpl(dbConnection));
+
+        Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
+
+        for(Abonnement i : abonnements.values()){
+            System.out.println("====================");
+            System.out.println(i.toString());
+            System.out.println("==================== \n");
+        }
     }
 
     private void afficherPaiements() {
