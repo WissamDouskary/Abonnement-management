@@ -195,11 +195,9 @@ public class Menu {
 
         Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
 
-        for(Abonnement i : abonnements.values()){
-            System.out.println("====================");
-            System.out.println(i.toString());
-            System.out.println("==================== \n");
-        }
+        System.out.println("====================");
+        abonnements.forEach((key, abo) -> System.out.println(abo.toString() + "\n"));
+        System.out.println("==================== \n");
     }
 
     private void afficherPaiements() {
