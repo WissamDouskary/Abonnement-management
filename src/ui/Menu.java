@@ -359,8 +359,39 @@ public class Menu {
         }
     }
 
-    private void supprimerAbonnement() {
-        System.out.println("Suppression d'un abonnement...");
+    private void supprimerAbonnement() throws SQLException {
+        System.out.println("Supression d'un abonnement ========================");
+
+        System.out.println("ABONNEMENTS : ---------------------------");
+        Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
+
+        System.out.println("====================");
+        abonnements.forEach((key, abo) -> System.out.println(abo.toString() + "\n"));
+        System.out.println("==================== \n");
+
+        System.out.println("Entrer Abonnement ID pour la supprission: ");
+        scanner.nextLine();
+        String id = scanner.nextLine();
+
+        Abonnement abonnement = abonnementService.findById(id);
+
+        if(abonnement == null){
+            System.out.println("Aucun abonnement avec ce ID!");
+            return;
+        }
+
+        System.out.println("Abonnement found!");
+        System.out.println("etes-vous sur de vouloir supprimer cet abonnement ( 1. Oui / 2. Non) :");
+        int deletionChoice = saisirInt();
+
+        if(deletionChoice == 1){
+            abonnementService.deleteAbonnement(abonnement);
+            System.out.println("Abonnement supprimer avec sucess");
+        }else if(deletionChoice == 2){
+            System.out.println("Ok!");
+        }else{
+            System.out.println("Invalid selection");
+        }
     }
 
     private void consulterAbonnements() {

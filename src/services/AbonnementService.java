@@ -88,6 +88,13 @@ public class AbonnementService {
         }
     }
 
+    public String deleteAbonnement(Abonnement abonnement){
+        if(abonnement.getId().toString().isEmpty()){return "entrer une valide id";}
+
+        abonnementImpl.delete(abonnement);
+        return "Abonnement supprimer avec sucess!";
+    }
+
     public Map<String, Abonnement> findAllAbonnements(){
         return abonnementImpl.findAll();
     }
