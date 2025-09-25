@@ -1,4 +1,6 @@
 package ui;
+
+import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -6,16 +8,17 @@ import java.time.format.DateTimeFormatter;
 import config.DBconnection;
 import dao.impl.AbonnementDAOImpl;
 import entity.Abonnement;
+import entity.AbonnementAvecEngagement;
+import entity.AbonnementSansEngagement;
 import entity.enums.*;
 import services.AbonnementService;
 
-import java.util.InputMismatchException;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 
 public class Menu {
     private static Scanner scanner = new Scanner(System.in);
+    private static DBconnection dbConnection = DBconnection.getInstance();
+    private static AbonnementService abonnementService = new AbonnementService(new AbonnementDAOImpl(dbConnection));
 
     public void afficherMenu() {
         System.out.println("=====================================");
@@ -42,7 +45,7 @@ public class Menu {
         return scanner.nextInt();
     }
 
-    public void traiterChoix(int choix) {
+    public void traiterChoix(int choix) throws SQLException {
         switch (choix) {
             case 1:
                 creerAbonnement();
@@ -162,8 +165,6 @@ public class Menu {
 
         // create and applicate variables in service
         try {
-            DBconnection dbConnection = DBconnection.getInstance();
-            AbonnementService abonnementService = new AbonnementService(new AbonnementDAOImpl(dbConnection));
             String result = abonnementService.createAbonnement(
                     serviceNom,
                     montantMonsuel,
@@ -179,9 +180,183 @@ public class Menu {
         }
     }
 
-    private void modifierAbonnement() {
+    private void modifierAbonnement() throws SQLException {
         System.out.println("Modification d'un abonnement ========================");
 
+        // showing abonnements
+        consulterAbonnements();
+
+        System.out.println("Choisissez l'ID dans cette liste pour l'abonnement que vous souhaitez modifier: ");
+
+        scanner.nextLine();
+        String id = scanner.nextLine();
+
+        if (abonnementService.findById(id) != null) {
+            Abonnement abonnement = abonnementService.findById(id);
+
+            while (true) {
+                System.out.println("1. Modifier le nom de service");
+                System.out.println("2. Modifier le montant mensuel");
+                System.out.println("3. Modifier la date de debut");
+                System.out.println("4. Modifier la date de fin");
+                System.out.println("5. Modifier le statut d'abonnement");
+                System.out.println("6. Modifier le type d'abonnement");
+                if (abonnement instanceof AbonnementAvecEngagement && abonnement.getType_abonnement() == type_abonnement.AVEC_ENGAGEMENT) {
+                    System.out.println("7. Modifier la duree Engagement mois");
+                }
+                System.out.println("0. Save Changes");
+
+                int updateChoice = saisirChoix();
+                scanner.nextLine();
+
+                if (updateChoice == 0) {
+                    break;
+                }
+
+                switch (updateChoice) {
+                    case 1:
+                        System.out.println("Entrer le neauvaux nom de service :");
+                        String newService = scanner.nextLine();
+                        abonnement.setNomService(newService);
+                        System.out.println("nom de service modifie avec success");
+                        break;
+                    case 2:
+                        System.out.println("Entrer le neauvaux montant Monsieul :");
+                        double newMontant = scanner.nextDouble();
+                        abonnement.setMontantMensuel(newMontant);
+                        System.out.println("montant Monsieul modifie avec success");
+                        break;
+                    case 3:
+                        System.out.println("Entrer le neauveau date de debut (yyyy-mm-dd): ");
+                        String debutdate = scanner.nextLine();
+                        abonnement.setDateDebut(LocalDate.parse(debutdate));
+                        System.out.println("date de debut modifie avec success");
+                        break;
+                    case 4:
+                        System.out.println("Entrer le neauveau date de fin (yyyy-mm-dd): ");
+                        String dateFin = scanner.nextLine();
+                        abonnement.setDatefin(LocalDate.parse(dateFin));
+                        System.out.println("date de fin modifie avec success");
+                        break;
+                    case 5:
+                        System.out.println("statut actuel: "+ abonnement.getStatus());
+                        System.out.println("Entrer le neauveau status: ");
+
+                        System.out.println("1. Active");
+                        System.out.println("2. Suspendu");
+                        System.out.println("3. Resilie");
+
+                        System.out.println("Ton choix: ");
+                        int choice = saisirInt();
+
+                        if(choice == 1){
+                            abonnement.setStatus(statut_abonnement.Active);
+                            System.out.println("Abonnement statut modifie par: " + statut_abonnement.Active);
+                        }else if(choice == 2){
+                            abonnement.setStatus(statut_abonnement.Suspendu);
+                            System.out.println("Abonnement statut modifie par: " + statut_abonnement.Suspendu);
+                        }else if (choice == 3){
+                            abonnement.setStatus(statut_abonnement.Resilie);
+                            System.out.println("Abonnement statut modifie par: " + statut_abonnement.Resilie);
+                        }else{
+                            System.out.println("Invalid selection!");
+                        }
+                        break;
+                    case 6:
+                        System.out.println("Type actuel: " + abonnement.getType_abonnement());
+                        System.out.println("Entrer le nouveau type d'abonnement: ");
+                        System.out.println("1. Avec Engagement");
+                        System.out.println("2. Sans Engagement");
+
+                        int typeChoice = saisirInt();
+
+                        if (typeChoice == 1) {
+                            if (abonnement.getType_abonnement() == type_abonnement.SANS_ENGAGEMENT) {
+                                System.out.println("Durée d'engagement (en mois): ");
+                                int duree = saisirInt();
+
+                                abonnement = new AbonnementAvecEngagement(
+                                        abonnement.getId().toString(),
+                                        abonnement.getNomService(),
+                                        abonnement.getMontantMensuel(),
+                                        abonnement.getDateDebut(),
+                                        abonnement.getDatefin() != null ? abonnement.getDatefin() : abonnement.getDateDebut().plusMonths(duree),
+                                        abonnement.getStatus(),
+                                        duree,
+                                        type_abonnement.AVEC_ENGAGEMENT
+                                );
+
+                                System.out.println("Type changé en: AVEC_ENGAGEMENT avec durée " + duree + " mois");
+
+                            } else {
+                                System.out.println("Cet abonnement est déjà Avec Engagement!");
+                            }
+
+                        } else if (typeChoice == 2) {
+                            if (abonnement.getType_abonnement() == type_abonnement.AVEC_ENGAGEMENT) {
+
+                                abonnement = new AbonnementSansEngagement(
+                                        abonnement.getId().toString(),
+                                        abonnement.getNomService(),
+                                        abonnement.getMontantMensuel(),
+                                        abonnement.getDateDebut(),
+                                        abonnement.getDatefin(),
+                                        abonnement.getStatus(),
+                                        type_abonnement.SANS_ENGAGEMENT
+                                );
+
+                                System.out.println("Type changé en: SANS_ENGAGEMENT");
+
+                            } else {
+                                System.out.println("Cet abonnement est déjà Sans Engagement!");
+                            }
+                        } else {
+                            System.out.println("Choix invalide");
+                        }
+                        break;
+                    case 7:
+                        System.out.println("Entrer le neauveau duree d'engagement");
+
+                        int duree = saisirInt();
+
+                        if(abonnement instanceof AbonnementAvecEngagement){
+                            AbonnementAvecEngagement abo = (AbonnementAvecEngagement) abonnement;
+                            abo.setDureeEngagementMois(duree);
+                            System.out.println("Duree modifie avec sucess!");
+                        }
+
+                        break;
+                    default:
+                        System.out.println("invalid Selection!");
+                        break;
+                }
+
+            }
+
+            Optional<Integer> dureeEngagementMois;
+
+            if (abonnement instanceof AbonnementAvecEngagement) {
+                AbonnementAvecEngagement aboEngagement = (AbonnementAvecEngagement) abonnement;
+                dureeEngagementMois = Optional.of(aboEngagement.getDureeEngagementMois());
+            } else {
+                dureeEngagementMois = Optional.empty();
+            }
+
+            abonnementService.updateAbonnement(
+                    abonnement.getId().toString(),
+                    abonnement.getNomService(),
+                    abonnement.getMontantMensuel(),
+                    abonnement.getStatus(),
+                    abonnement.getType_abonnement(),
+                    abonnement.getDateDebut(),
+                    Optional.ofNullable(abonnement.getDatefin()),
+                    dureeEngagementMois
+            );
+
+            System.out.println("Abonnement information's updated sucessfully!");
+        } else {
+            System.out.println("aucun abonnement avec cette id!");
+        }
     }
 
     private void supprimerAbonnement() {
@@ -190,8 +365,6 @@ public class Menu {
 
     private void consulterAbonnements() {
         System.out.println("la liste des abonnements ========================");
-        DBconnection dbConnection = DBconnection.getInstance();
-        AbonnementService abonnementService = new AbonnementService(new AbonnementDAOImpl(dbConnection));
 
         Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
 

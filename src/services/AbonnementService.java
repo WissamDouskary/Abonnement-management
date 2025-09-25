@@ -8,6 +8,7 @@ import entity.enums.*;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 
 public class AbonnementService {
@@ -15,6 +16,10 @@ public class AbonnementService {
 
     public AbonnementService (AbonnementDAOImpl abonnementImpl){
         this.abonnementImpl = abonnementImpl;
+    }
+
+    public Abonnement findById(String id) throws SQLException {
+        return abonnementImpl.findbyId(id);
     }
 
     public String createAbonnement(String nomService, double montantMensuel,
@@ -38,5 +43,52 @@ public class AbonnementService {
         }
 
         return "Abonnement created successfully!";
+    }
+
+    public String updateAbonnement(
+            String id,
+            String nomService, double montantMensuel,
+            statut_abonnement status, type_abonnement type,
+            LocalDate startDate,
+            Optional<LocalDate> dateFin,
+            Optional<Integer> dureeEngagementMois
+    ){
+        try {
+            Abonnement abonnement;
+
+            if (type == type_abonnement.AVEC_ENGAGEMENT) {
+                abonnement = new AbonnementAvecEngagement(
+                        id,
+                        nomService,
+                        montantMensuel,
+                        startDate,
+                        dateFin.orElse(null),
+                        status,
+                        dureeEngagementMois.orElse(0),
+                        type
+                );
+            } else {
+                abonnement = new AbonnementSansEngagement(
+                        id,
+                        nomService,
+                        montantMensuel,
+                        startDate,
+                        dateFin.orElse(null),
+                        status,
+                        type
+                );
+            }
+
+            abonnementImpl.update(abonnement);
+            return "Abonnement updated successfully!";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error while updating abonnement: " + e.getMessage();
+        }
+    }
+
+    public Map<String, Abonnement> findAllAbonnements(){
+        return abonnementImpl.findAll();
     }
 }

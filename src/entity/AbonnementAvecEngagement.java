@@ -12,6 +12,12 @@ public class AbonnementAvecEngagement extends Abonnement {
         setDureeEngagementMois(dureeEngagementMois);
     }
 
+    public AbonnementAvecEngagement(String id, String nomService, double montantMensuel, LocalDate dateDebut,
+                                    LocalDate dateFin, statut_abonnement statut, int dureeEngagementMois, type_abonnement type) {
+        super(id, nomService, montantMensuel, dateDebut, dateFin, statut, type);
+        setDureeEngagementMois(dureeEngagementMois);
+    }
+
     public int getDureeEngagementMois() {
         return dureeEngagementMois;
     }

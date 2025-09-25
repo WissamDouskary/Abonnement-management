@@ -25,6 +25,16 @@ public abstract class Abonnement {
         setType_abonnement(type);
     }
 
+    public Abonnement(String id, String nomService, double montantMensuel, LocalDate dateDebut, LocalDate datefin, statut_abonnement status, type_abonnement type) {
+        this.id = UUID.fromString(id);
+        this.nomService = nomService;
+        this.montantMensuel = montantMensuel;
+        this.dateDebut = dateDebut;
+        this.datefin = datefin;
+        this.status = status;
+        this.type_abonnement = type;
+    }
+
     public UUID getId() {
         return id;
     }
@@ -38,10 +48,10 @@ public abstract class Abonnement {
     }
 
     public String toString() {
-        return "Abonnement:\n" +
-                "id: " + getId() + "\n" +
+        return "id: " + getId() + "\n" +
                 "nomService: '" + getNomService() + "'\n" +
                 "montantMensuel: " + getMontantMensuel() + "\n" +
+                "Type: " + getType_abonnement() + "\n" +
                 "dateDebut: " + getDateDebut() + "\n" +
                 "dateFin: " + getDatefin();
     }

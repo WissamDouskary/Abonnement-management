@@ -82,15 +82,15 @@ public class AbonnementDAOImpl implements AbonnementDAO{
                 st.setNull(4, Types.DATE);
             }
 
-            st.setObject(5, abonnement.getStatus().name());
+            st.setObject(5, abonnement.getStatus(), Types.OTHER);
 
             if(abonnement instanceof AbonnementAvecEngagement){
-                AbonnementAvecEngagement abonnementAvecEngagement = (AbonnementAvecEngagement) abonnement;
-                st.setObject(7, "Avec Engagement");
-                st.setInt(8, abonnementAvecEngagement.getDureeEngagementMois());
-            }else{
-                AbonnementSansEngagement abonnementSansEngagement = (AbonnementSansEngagement) abonnement;
-                st.setObject(7, "Sans Engagement");
+                AbonnementAvecEngagement abo = (AbonnementAvecEngagement) abonnement;
+                st.setObject(6, "Avec Engagement", Types.OTHER);
+                st.setInt(7, abo.getDureeEngagementMois());
+            } else {
+                st.setObject(6, "Sans Engagement", Types.OTHER);
+                st.setNull(7, Types.INTEGER);
             }
 
             st.setString(8, abonnement.getId().toString());
@@ -185,7 +185,6 @@ public class AbonnementDAOImpl implements AbonnementDAO{
                     Date dateFinSql = rs.getDate("date_fin");
                     LocalDate dateFin = (dateFinSql != null) ? dateFinSql.toLocalDate() : null;
 
-                    System.out.println(rs.getString("statut"));
                     String statutStr = rs.getString("statut");
                     statut_abonnement statut = statut_abonnement.valueOf(statutStr);
 
