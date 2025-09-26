@@ -1,9 +1,11 @@
 package services;
 
 import dao.impl.AbonnementDAOImpl;
+import dao.impl.PaimentDAOImpl;
 import entity.Abonnement;
 import entity.AbonnementAvecEngagement;
 import entity.AbonnementSansEngagement;
+import entity.Paiement;
 import entity.enums.*;
 
 import java.sql.SQLException;
@@ -13,9 +15,11 @@ import java.util.Optional;
 
 public class AbonnementService {
     private AbonnementDAOImpl abonnementImpl;
+    private PaiementService paiementService;
 
-    public AbonnementService (AbonnementDAOImpl abonnementImpl){
+    public AbonnementService (AbonnementDAOImpl abonnementImpl, PaiementService paiementService){
         this.abonnementImpl = abonnementImpl;
+        this.paiementService = paiementService;
     }
 
     public Abonnement findById(String id) throws SQLException {
@@ -26,23 +30,45 @@ public class AbonnementService {
                                    statut_abonnement status, type_abonnement type,
                                    LocalDate startDate,
                                    Optional<LocalDate> dateFin,
-                                   Optional<Integer> dureeEngagementMois) throws SQLException {
+                                   Optional<Integer> dureeEngagementMois
+    ) throws SQLException {
 
         // checking fields
-        if(nomService.isEmpty()) { return "Enter a valid service name"; }
-        if(montantMensuel <= 0) { return "Enter a valid montant mensuel"; }
-        if(startDate == null) { return "La date de début est invalide."; }
+        if (nomService.isEmpty()) { return "Enter a valid service name"; }
+        if (montantMensuel <= 0) { return "Enter a valid montant mensuel"; }
+        if (startDate == null) { return "La date de début est invalide."; }
 
-        if(type == type_abonnement.AVEC_ENGAGEMENT){
-            AbonnementAvecEngagement abonnementAvecEngagement =
-                    new AbonnementAvecEngagement(nomService, montantMensuel, startDate, dateFin.orElse(null), status, dureeEngagementMois.orElse(0), type_abonnement.AVEC_ENGAGEMENT);
-            abonnementImpl.create(abonnementAvecEngagement);
-        } else if(type == type_abonnement.SANS_ENGAGEMENT){
-            Abonnement abonnementSansEngagement = new AbonnementSansEngagement(nomService, montantMensuel, startDate, dateFin.orElse(null), status, type);
-            abonnementImpl.create(abonnementSansEngagement);
+        Abonnement abonnement;
+
+        if (type == type_abonnement.AVEC_ENGAGEMENT) {
+            int duree = dureeEngagementMois.orElse(0);
+            LocalDate endDate = dateFin.orElse(startDate.plusMonths(duree));
+
+            abonnement = new AbonnementAvecEngagement(
+                    nomService,
+                    montantMensuel,
+                    startDate,
+                    endDate,
+                    status,
+                    duree,
+                    type_abonnement.AVEC_ENGAGEMENT
+            );
+
+            abonnementImpl.create(abonnement);
+
+        } else {
+            abonnement = new AbonnementSansEngagement(
+                    nomService,
+                    montantMensuel,
+                    startDate,
+                    dateFin.orElse(null),
+                    status,
+                    type_abonnement.SANS_ENGAGEMENT
+            );
+            abonnementImpl.create(abonnement);
         }
 
-        return "Abonnement created successfully!";
+        return abonnement.getId().toString();
     }
 
     public String updateAbonnement(

@@ -1,24 +1,27 @@
 package ui;
 
-import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import config.DBconnection;
 import dao.impl.AbonnementDAOImpl;
+import dao.impl.PaimentDAOImpl;
 import entity.Abonnement;
 import entity.AbonnementAvecEngagement;
 import entity.AbonnementSansEngagement;
+import entity.Paiement;
 import entity.enums.*;
 import services.AbonnementService;
+import services.PaiementService;
 
 import java.util.*;
 
 public class Menu {
     private static Scanner scanner = new Scanner(System.in);
     private static DBconnection dbConnection = DBconnection.getInstance();
-    private static AbonnementService abonnementService = new AbonnementService(new AbonnementDAOImpl(dbConnection));
+    private static PaiementService paiementService = new PaiementService(new PaimentDAOImpl(dbConnection));
+    private static AbonnementService abonnementService = new AbonnementService(new AbonnementDAOImpl(dbConnection), paiementService);
 
     public void afficherMenu() {
         System.out.println("=====================================");
@@ -29,7 +32,7 @@ public class Menu {
         System.out.println("3. Supprimer un abonnement");
         System.out.println("4. Consulter la liste des abonnements");
         System.out.println("5. Afficher les paiements d'un abonnement");
-        System.out.println("6. Enregistrer un paiement");
+        System.out.println("6. Crée un paiement");
         System.out.println("7. Modifier un paiement");
         System.out.println("8. Supprimer un paiement");
         System.out.println("9. Consulter les paiements manqués");
@@ -63,7 +66,7 @@ public class Menu {
                 afficherPaiements();
                 break;
             case 6:
-                enregistrerPaiement();
+                creerPaiement();
                 break;
             case 7:
                 modifierPaiement();
@@ -105,20 +108,19 @@ public class Menu {
 
         System.out.println("Entrer le montant mensuel: ");
         double montantMonsuel = scanner.nextDouble();
-
         scanner.nextLine();
 
+        // choix de date de début
         System.out.println("Entrer la Date de Debut: ");
-        System.out.println("1. Entrez Automatiquement la date d'aujourd'hui");
-        System.out.println("2. Entrer une specifique date");
-
+        System.out.println("1. Utiliser la date d'aujourd'hui");
+        System.out.println("2. Entrer une date spécifique");
         int dateChoix = saisirInt();
         scanner.nextLine();
-        LocalDate startDate = LocalDate.now();
+        LocalDate startDate;
 
         if (dateChoix == 1) {
             startDate = LocalDate.now();
-        } else if (dateChoix == 2) {
+        } else {
             System.out.println("Entrez la date sous la forme (yyyy-MM-dd): ");
             String inputDate = scanner.nextLine();
             try {
@@ -127,33 +129,22 @@ public class Menu {
                 System.out.println("Date invalide, la date d'aujourd'hui sera utilisée.");
                 startDate = LocalDate.now();
             }
-        } else {
-            System.out.println("Choix invalide, date par défaut aujourd'hui sera utilisée.");
-            startDate = LocalDate.now();
         }
 
         statut_abonnement status_abo = statut_abonnement.Active;
-        type_abonnement type_abo = null;
+        type_abonnement type_abo;
         Optional<Integer> dureeEngagementMois = Optional.empty();
         Optional<LocalDate> dateFin = Optional.empty();
 
-        // engagement types
+        // type d'abonnement
         if (typeChoice == 1) {
             type_abo = type_abonnement.AVEC_ENGAGEMENT;
             System.out.println("Entrer la durée d'engagement en mois: ");
             int duree = saisirInt();
             dureeEngagementMois = Optional.of(duree);
-            if (startDate != null) {
-                dateFin = Optional.of(startDate.plusMonths(duree));
-            }
+            dateFin = Optional.of(startDate.plusMonths(duree));
         } else if (typeChoice == 2) {
             type_abo = type_abonnement.SANS_ENGAGEMENT;
-        } else {
-            System.out.println("Choix invalide, abonnement annulé.");
-            return;
-        }
-
-        if (type_abo == type_abonnement.SANS_ENGAGEMENT) {
             System.out.println("Souhaitez-vous définir une date de fin ? (oui/non)");
             String choix = scanner.nextLine();
             if (choix.equalsIgnoreCase("oui")) {
@@ -161,11 +152,13 @@ public class Menu {
                 String dateFinStr = scanner.nextLine();
                 dateFin = Optional.of(LocalDate.parse(dateFinStr, DateTimeFormatter.ofPattern("yyyy-MM-dd")));
             }
+        } else {
+            System.out.println("Choix invalide, abonnement annulé.");
+            return;
         }
 
-        // create and applicate variables in service
         try {
-            String result = abonnementService.createAbonnement(
+            String idAbonnement = abonnementService.createAbonnement(
                     serviceNom,
                     montantMonsuel,
                     status_abo,
@@ -174,7 +167,26 @@ public class Menu {
                     dateFin,
                     dureeEngagementMois
             );
-            System.out.println(result);
+
+            System.out.println("Abonnement créé avec succès: " + idAbonnement);
+
+            if (type_abo == type_abonnement.AVEC_ENGAGEMENT && dureeEngagementMois.isPresent()) {
+
+                int duree = dureeEngagementMois.get();
+                    for (int i = 0; i < duree; i++) {
+                        LocalDate dateEcheance = startDate.plusMonths(i + 1);
+                        Paiement paiement = new Paiement(
+                                UUID.fromString(idAbonnement),
+                                dateEcheance,
+                                null,
+                                type_paiement.Autre,
+                                statut_paiement.NON_PAYE.getDisplayName());
+                        paiementService.createPaiement(paiement);
+                    }
+                    System.out.println(duree + " paiements générés automatiquement.");
+
+            }
+
         } catch (SQLException e) {
             System.out.println("Erreur de base de données: " + e.getMessage());
         }
@@ -322,6 +334,7 @@ public class Menu {
                         if(abonnement instanceof AbonnementAvecEngagement){
                             AbonnementAvecEngagement abo = (AbonnementAvecEngagement) abonnement;
                             abo.setDureeEngagementMois(duree);
+                            abo.setDatefin(abo.getDatefin().plusMonths(duree));
                             System.out.println("Duree modifie avec sucess!");
                         }
 
@@ -353,7 +366,22 @@ public class Menu {
                     dureeEngagementMois
             );
 
-            System.out.println("Abonnement information's updated sucessfully!");
+            Paiement paiement = paiementService.findByAbonnementId(id);
+            if (paiement != null) {
+                LocalDate newEcheance;
+
+                if (abonnement.getDatefin() != null) {
+                    newEcheance = abonnement.getDatefin();
+                } else {
+                    newEcheance = abonnement.getDateDebut().plusMonths(1);
+                }
+
+                paiement.setDateEcheance(newEcheance);
+                paiementService.updatePaiement(paiement);
+            }
+
+            System.out.println("Abonnement updated successfully! Paiement échéance updated.");
+
         } else {
             System.out.println("aucun abonnement avec cette id!");
         }
@@ -405,15 +433,101 @@ public class Menu {
     }
 
     private void afficherPaiements() {
-        System.out.println("Affichage des paiements d'un abonnement...");
+        System.out.println("Affichage des paiements d'un abonnement ==============");
+
+        Map<String, Paiement> paiments = paiementService.findAll();
+        Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
+
+        Map<Abonnement, Paiement> abonnementPaiementMap = new HashMap<>();
+
+        for(Paiement p : paiments.values()){
+            for (Abonnement a : abonnements.values()){
+                if(p.getIdAbonnement().equals(a.getId())){
+                    abonnementPaiementMap.put(a, p);
+                }
+            }
+        }
+
+        for(Abonnement abonnement : abonnementPaiementMap.keySet()){
+            for(Paiement paiement : abonnementPaiementMap.values()){
+
+                System.out.println("==================");
+                System.out.println(abonnement);
+                System.out.println("ABONNEMENT PAIEMENT: ");
+                System.out.println(paiement);
+                System.out.println("==================");
+
+            }
+        }
+
     }
 
-    private void enregistrerPaiement() {
-        System.out.println("Enregistrement d'un paiement...");
+    private void creerPaiement(){
+
     }
 
     private void modifierPaiement() {
-        System.out.println("Modification d'un paiement...");
+        System.out.println("Modification d'un paiement ========================");
+        Map<String, Paiement> paiments = paiementService.findAll();
+
+        paiments.forEach((key, pai) -> System.out.println("==================\n"+pai+"\n==================\n"));
+
+        System.out.println("Entrer l'ID du paiement à modifier :");
+        scanner.nextLine();
+        String idPaiement = scanner.nextLine();
+
+        Paiement paiement = paiementService.findById(idPaiement);
+        if (paiement == null) {
+            System.out.println("Aucun paiement trouvé avec cet ID.");
+            return;
+        }
+
+        while (true) {
+            System.out.println("1. Modifier date échéance");
+            System.out.println("2. Modifier date paiement");
+            System.out.println("3. Modifier type paiement");
+            System.out.println("4. Modifier statut");
+            System.out.println("0. Sauvegarder");
+
+            int choix = saisirInt();
+            scanner.nextLine();
+
+            if (choix == 0) break;
+
+            switch (choix) {
+                case 1:
+                    System.out.println("Nouvelle date échéance (yyyy-MM-dd):");
+                    String newEch = scanner.nextLine();
+                    paiement.setDateEcheance(LocalDate.parse(newEch));
+                    break;
+                case 2:
+                    System.out.println("Nouvelle date paiement (yyyy-MM-dd):");
+                    String newPaiement = scanner.nextLine();
+                    paiement.setDatePaiement(LocalDate.parse(newPaiement));
+                    break;
+                case 3:
+                    System.out.println("Nouveau type (1.Carte 2.Virement 3.Cheque 4.Autre):");
+                    int type = saisirInt();
+                    paiement.setTypePaiement(type == 1 ? type_paiement.Carte :
+                            type == 2 ? type_paiement.Virement :
+                                    type == 3 ? type_paiement.Cheque :
+                                            type_paiement.Autre);
+                    break;
+                case 4:
+                    System.out.println("Nouveau statut (1.PAYÉ 2.NON_PAYÉ 3.EN_RETARD):");
+                    int st = saisirInt();
+                    paiement.setStatus_paiment(
+                            st == 1 ? statut_paiement.PAYE.getDisplayName() :
+                                    st == 2 ? statut_paiement.NON_PAYE.getDisplayName() :
+                                            statut_paiement.EN_RETARD.getDisplayName()
+                    );
+                    break;
+                default:
+                    System.out.println("Choix invalide !");
+            }
+        }
+
+        paiementService.updatePaiement(paiement);
     }
 
     private void supprimerPaiement() {
