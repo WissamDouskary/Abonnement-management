@@ -6,8 +6,6 @@ import entity.Paiement;
 import entity.enums.*;
 
 import java.sql.*;
-import java.time.LocalDate;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -62,8 +60,16 @@ public class PaimentDAOImpl implements PaiementDAO {
 
     //do not implement yet
     @Override
-    public void delete() {
+    public void delete(String id) {
+        String sql = "DELETE FROM paiement WHERE id_paiement = ?";
 
+        try(PreparedStatement st = conn.prepareStatement(sql)){
+            st.setString(1, id);
+            st.executeUpdate();
+        }
+        catch (SQLException e) {
+            throw new RuntimeException("Error deleting paiement: " + e.getMessage(), e);
+        }
     }
 
     @Override

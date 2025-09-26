@@ -21,7 +21,6 @@ public class PaiementService {
         if(paiement.getDateEcheance().toString().isEmpty()){ System.out.println("you can't continue without date!");}
 
         paimentDAOimpl.create(paiement);
-        System.out.println("payment created successfully!");
     }
 
     public void createPaiement(UUID idAbonnement, LocalDate dateEcheance, Double montant,
@@ -46,6 +45,11 @@ public class PaiementService {
         }
         paimentDAOimpl.update(paiement);
         System.out.println("Paiement updated successfully!");
+    }
+
+    public void deletePaiement(String id){
+        paimentDAOimpl.delete(id);
+        System.out.println("Paiement delete successfully with id: "+id);
     }
 
     public Paiement findById(String idPaiement) {

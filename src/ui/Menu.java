@@ -589,7 +589,23 @@ public class Menu {
     }
 
     private void supprimerPaiement() {
-        System.out.println("Suppression d'un paiement...");
+        System.out.println("Suppression d'un paiement =====================");
+
+        afficherPaiements();
+
+        System.out.println("Entrer l'ID du paiement pour supprimer: ");
+        scanner.nextLine();
+
+        String id = scanner.nextLine();
+
+        Paiement paiement = paiementService.findById(id);
+
+        if(paiement != null){
+            paiementService.deletePaiement(paiement.getIdPaiement().toString());
+            System.out.println("Paimenet supprimé avec sucess!");
+        }else{
+            System.out.println("Aucun paiement avec ce ID!");
+        }
     }
 
     private void consulterPaiementsManques() {
