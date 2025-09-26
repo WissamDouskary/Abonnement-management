@@ -435,31 +435,45 @@ public class Menu {
     private void afficherPaiements() {
         System.out.println("Affichage des paiements d'un abonnement ==============");
 
-        Map<String, Paiement> paiments = paiementService.findAll();
+        Map<String, Paiement> paiements = paiementService.findAll();
         Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
 
-        Map<Abonnement, Paiement> abonnementPaiementMap = new HashMap<>();
+        Map<Abonnement, List<Paiement>> abonnementPaiementsMap = new HashMap<>();
 
-        for(Paiement p : paiments.values()){
-            for (Abonnement a : abonnements.values()){
-                if(p.getIdAbonnement().equals(a.getId())){
-                    abonnementPaiementMap.put(a, p);
+        for (Paiement p : paiements.values()) {
+            for (Abonnement a : abonnements.values()) {
+                if (p.getIdAbonnement().equals(a.getId())) {
+                    if (!abonnementPaiementsMap.containsKey(a)) {
+                        abonnementPaiementsMap.put(a, new ArrayList<>());
+                    }
+                    abonnementPaiementsMap.get(a).add(p);
                 }
             }
         }
 
-        for(Abonnement abonnement : abonnementPaiementMap.keySet()){
-            for(Paiement paiement : abonnementPaiementMap.values()){
+        for (Abonnement a : abonnementPaiementsMap.keySet()) {
+            System.out.println("\n--------------------------------------");
+            System.out.println("Abonnement ID        : " + a.getId());
+            System.out.println("Nom du service        : " + a.getNomService());
+            System.out.println("Type                 : " + a.getType_abonnement());
+            System.out.println("Date de début        : " + a.getDateDebut());
+            System.out.println("Date de fin          : " + a.getDatefin());
+            System.out.println("Montant total        : " + a.getMontantMensuel() + " DH");
+            System.out.println("----------------------------------------");
+            System.out.println("PAIEMENTS ASSOCIÉS :");
 
-                System.out.println("==================");
-                System.out.println(abonnement);
-                System.out.println("ABONNEMENT PAIEMENT: ");
-                System.out.println(paiement);
-                System.out.println("==================");
-
+            List<Paiement> paiementsList = abonnementPaiementsMap.get(a);
+            for (Paiement p : paiementsList) {
+                System.out.println("   ------------------------------");
+                System.out.println("   Paiement ID        : " + p.getIdPaiement());
+                System.out.println("   Date de paiement   : " + p.getDatePaiement());
+                System.out.println("   Date d'echeance       : " + p.getDateEcheance());
+                System.out.println("   Type de paiement  : " + p.getTypePaiement());
+                System.out.println("   Statut  : " + p.getStatus_paiment());
             }
-        }
 
+            System.out.println("=========================================\n");
+        }
     }
 
     private void creerPaiement(){

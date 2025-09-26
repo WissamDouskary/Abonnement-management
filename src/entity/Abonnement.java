@@ -48,12 +48,12 @@ public abstract class Abonnement {
     }
 
     public String toString() {
-        return "id: " + getId() + "\n" +
-                "nomService: '" + getNomService() + "'\n" +
-                "montantMensuel: " + getMontantMensuel() + "\n" +
-                "Type: " + getType_abonnement() + "\n" +
-                "dateDebut: " + getDateDebut() + "\n" +
-                "dateFin: " + getDatefin();
+        return "Abonnement ID        : " + getId() + "\n" +
+                "Nom du service        : '" + getNomService() + "'\n" +
+                "Montant total        : " + getMontantMensuel() + "\n" +
+                "Type                 : " + getType_abonnement() + "\n" +
+                "Date de début        : " + getDateDebut() + "\n" +
+                "Date de fin          : " + getDatefin();
     }
 
     public void setNomService(String nomService) {
