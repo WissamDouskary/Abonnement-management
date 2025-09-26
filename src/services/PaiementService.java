@@ -36,7 +36,7 @@ public class PaiementService {
         );
 
         paimentDAOimpl.create(paiement);
-        System.out.println("Paiement créé automatiquement pour l'abonnement " + idAbonnement);
+        System.out.println("Paiement créé pour l'abonnement " + idAbonnement);
     }
 
     public void updatePaiement(Paiement paiement) {

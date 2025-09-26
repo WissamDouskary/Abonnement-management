@@ -185,6 +185,50 @@ public class Menu {
                     }
                     System.out.println(duree + " paiements générés automatiquement.");
 
+            }else{
+                System.out.println("Entrer le type de paiement :");
+                System.out.println("1. Carde");
+                System.out.println("2. Virement");
+                System.out.println("3. Cheque");
+                System.out.println("4. Autre");
+
+                int typePaimenetChoice = saisirInt();
+                type_paiement typePaiement = null;
+
+                switch(typePaimenetChoice){
+                    case 1:
+                        typePaiement = type_paiement.Carte;
+                        break;
+                    case 2:
+                        typePaiement = type_paiement.Virement;
+                        break;
+                    case 3:
+                        typePaiement = type_paiement.Cheque;
+                        break;
+                    case 4:
+                        typePaiement = type_paiement.Autre;
+                        break;
+                    default:
+                        System.out.println("invalid selection");
+                        break;
+                }
+
+                LocalDate datePaiement = null;
+
+                if(typePaiement != type_paiement.Autre){
+                    datePaiement = LocalDate.now();
+                }
+
+                Paiement paiement = new Paiement(
+                        UUID.fromString(idAbonnement),
+                        dateFin.orElse(null),
+                        datePaiement,
+                        typePaiement,
+                        statut_paiement.PAYE.getDisplayName());
+
+                paiementService.createPaiement(paiement);
+
+                System.out.println(" paiements générés automatiquement.");
             }
 
         } catch (SQLException e) {
@@ -477,7 +521,7 @@ public class Menu {
     }
 
     private void creerPaiement(){
-
+//        paiementService.createPaiement();
     }
 
     private void modifierPaiement() {
