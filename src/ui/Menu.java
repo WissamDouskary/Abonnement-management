@@ -520,9 +520,57 @@ public class Menu {
         }
     }
 
-    private void creerPaiement(){
-//        paiementService.createPaiement();
+    private void creerPaiement() throws SQLException {
+        System.out.println("Créer Paiement pour un abonnement ========================");
+
+        consulterAbonnements();
+
+        System.out.println("Entrer l'ID d'abonnement pour créer un paiement :");
+        String abonnementID = scanner.nextLine();
+        Abonnement abonnement = abonnementService.findById(abonnementID);
+
+        if (abonnement == null) {
+            System.out.println("Aucun abonnement avec cet ID !");
+            return;
+        }
+
+        System.out.println("Abonnement trouvé : " + abonnement.getNomService());
+
+        System.out.println("Entrer le type de paiement : (1.Carte 2.Virement 3.Cheque 4.Autre)");
+        int choix = saisirInt();
+        type_paiement typePaiement = choix == 1 ? type_paiement.Carte :
+                choix == 2 ? type_paiement.Virement :
+                        choix == 3 ? type_paiement.Cheque : type_paiement.Autre;
+
+        LocalDate datePaiement = LocalDate.now();
+
+        LocalDate dateEcheance;
+        if (abonnement.getType_abonnement() == type_abonnement.AVEC_ENGAGEMENT) {
+
+            dateEcheance = abonnement.getDateDebut().plusMonths(1);
+        } else {
+
+            dateEcheance = abonnement.getDatefin() != null ? abonnement.getDatefin() : datePaiement;
+        }
+
+        Paiement paiement = new Paiement(
+                UUID.randomUUID(),
+                abonnement.getId(),
+                dateEcheance,
+                datePaiement,
+                typePaiement,
+                statut_paiement.PAYE.getDisplayName()
+        );
+
+        paiementService.createPaiement(paiement);
+        System.out.println("Paiement ajouté avec succès !");
+        System.out.println("   - Abonnement : " + abonnement.getNomService());
+        System.out.println("   - Date paiement : " + paiement.getDatePaiement());
+        System.out.println("   - Échéance : " + paiement.getDateEcheance());
+        System.out.println("   - Type : " + paiement.getTypePaiement());
     }
+
+
 
     private void modifierPaiement() {
         System.out.println("Modification d'un paiement ========================");
