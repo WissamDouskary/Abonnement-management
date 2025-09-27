@@ -526,6 +526,7 @@ public class Menu {
         consulterAbonnements();
 
         System.out.println("Entrer l'ID d'abonnement pour créer un paiement :");
+        scanner.nextLine();
         String abonnementID = scanner.nextLine();
         Abonnement abonnement = abonnementService.findById(abonnementID);
 
@@ -569,8 +570,6 @@ public class Menu {
         System.out.println("   - Échéance : " + paiement.getDateEcheance());
         System.out.println("   - Type : " + paiement.getTypePaiement());
     }
-
-
 
     private void modifierPaiement() {
         System.out.println("Modification d'un paiement ========================");
