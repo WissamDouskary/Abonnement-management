@@ -656,7 +656,18 @@ public class Menu {
     }
 
     private void consulterPaiementsManques() {
-        System.out.println("Consultation des paiements manqués et du montant total impayé...");
+        System.out.println("Paiements manqués et du montant total impayé ==================");
+
+        Map<String, Double> unpaidAbonnement = paiementService.getUnpaidAbonnement();
+
+        for(String nomService : unpaidAbonnement.keySet()){
+            for(Double total : unpaidAbonnement.values()){
+                System.out.println("==================================");
+                System.out.println("Nom Service         : " + nomService);
+                System.out.println("Total               : " + total);
+                System.out.println("==================================");
+            }
+        }
     }
 
     private void afficherSommePayee() {

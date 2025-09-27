@@ -92,7 +92,6 @@ public abstract class Abonnement {
         this.status = status;
     }
 
-
     public type_abonnement getType_abonnement() {
         return type_abonnement;
     }

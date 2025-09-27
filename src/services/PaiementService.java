@@ -64,5 +64,7 @@ public class PaiementService {
         return paimentDAOimpl.findByAbonnementId(idAbonnement);
     }
 
-
+    public Map<String, Double> getUnpaidAbonnement(){
+        return paimentDAOimpl.findTotalUnpaidAbonnements();
+    }
 }

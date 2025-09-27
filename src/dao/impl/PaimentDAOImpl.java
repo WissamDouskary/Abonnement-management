@@ -141,4 +141,21 @@ public class PaimentDAOImpl implements PaiementDAO {
         return null;
     }
 
+    public Map<String, Double> findTotalUnpaidAbonnements(){
+        String sql = "SELECT a.nom_service, SUM(a.montant_mensuel) AS total FROM paiement p JOIN abonnement a ON p.id_abonnement = a.id WHERE (p.statut = 'Non payé' OR p.statut = 'En retard') AND p.date_paiement IS NULL AND a.type_abonnement = 'Avec Engagement' GROUP BY a.nom_service";
+        Map<String, Double> serviceAndtotalUnpaid = new HashMap<>();
+
+        try(PreparedStatement st = conn.prepareStatement(sql)){
+            ResultSet rs = st.executeQuery();
+            while(rs.next()){
+                serviceAndtotalUnpaid.put(rs.getString("nom_service"), rs.getDouble("total"));
+            }
+        }
+        catch (SQLException e){
+            System.out.println("Error while find total unpaid Abonnements :" + e.getMessage());
+        }
+
+        return serviceAndtotalUnpaid;
+    }
+
 }
