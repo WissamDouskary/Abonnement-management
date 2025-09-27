@@ -16,6 +16,7 @@ import services.AbonnementService;
 import services.PaiementService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Menu {
     private static Scanner scanner = new Scanner(System.in);
@@ -690,6 +691,48 @@ public class Menu {
 
     private void afficher5DerniersPaiements() {
         System.out.println("5 derniers paiements =========================");
+
+        Map<String, Paiement> paiements = paiementService.findAll();
+        Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
+
+        Map<Abonnement, List<Paiement>> abonnementPaiementsMap = new HashMap<>();
+
+        paiements.values().forEach(p -> {
+            Abonnement a = abonnements.get(p.getIdAbonnement().toString());
+            if (a != null) {
+                abonnementPaiementsMap
+                        .computeIfAbsent(a, k -> new ArrayList<>())
+                        .add(p);
+            }
+        });
+
+        for (Abonnement a : abonnementPaiementsMap.keySet()) {
+            System.out.println("\n--------------------------------------");
+            System.out.println("Abonnement ID        : " + a.getId());
+            System.out.println("Nom du service       : " + a.getNomService());
+            System.out.println("Type                 : " + a.getType_abonnement());
+            System.out.println("Date de début        : " + a.getDateDebut());
+            System.out.println("Date de fin          : " + a.getDatefin());
+            System.out.println("Montant mensuel      : " + a.getMontantMensuel() + " DH");
+            System.out.println("----------------------------------------");
+            System.out.println("DERNIERS PAIEMENTS (max 5) :");
+
+            List<Paiement> paiementsList = abonnementPaiementsMap.get(a).stream()
+                    .sorted(Comparator.comparing(Paiement::getDatePaiement, Comparator.nullsLast(Comparator.reverseOrder())))
+                    .limit(5)
+                    .collect(Collectors.toList());
+
+            for (Paiement p : paiementsList) {
+                System.out.println("   ------------------------------");
+                System.out.println("   Paiement ID       : " + p.getIdPaiement());
+                System.out.println("   Date de paiement  : " + p.getDatePaiement());
+                System.out.println("   Date d'échéance   : " + p.getDateEcheance());
+                System.out.println("   Type de paiement  : " + p.getTypePaiement());
+                System.out.println("   Statut            : " + p.getStatus_paiment());
+            }
+
+            System.out.println("=========================================\n");
+        }
     }
 
     private void genererRapportFinancier() {
