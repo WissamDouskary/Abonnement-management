@@ -671,11 +671,25 @@ public class Menu {
     }
 
     private void afficherSommePayee() {
-        System.out.println("Affichage de la somme payée d'un abonnement...");
+        System.out.println("Somme Payee du abonnements ====================");
+        Map<String, Paiement> paiements = paiementService.findAll();
+        Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
+
+        abonnements.values().forEach(abo -> {
+            long nombrePayee = paiements.values().stream()
+                    .filter(pa -> pa.getIdAbonnement().equals(abo.getId()))
+                    .filter(pa -> pa.getStatus_paiment().equals(statut_paiement.PAYE.getDisplayName()))
+                    .count();
+
+            double somePayee = nombrePayee * abo.getMontantMensuel();
+
+            System.out.println("Abonnement " + abo.getId() +
+                    " (" + abo.getNomService() + ") → Somme payée : " + somePayee + " DH");
+        });
     }
 
     private void afficher5DerniersPaiements() {
-        System.out.println("Affichage des 5 derniers paiements...");
+        System.out.println("5 derniers paiements =========================");
     }
 
     private void genererRapportFinancier() {
