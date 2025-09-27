@@ -11,4 +11,5 @@ public interface PaiementDAO {
     public Map<String, Paiement> findAll();
     public Paiement findById(String idPaiement);
     public Paiement findByAbonnementId(String idAbonnement);
+    public Map<String, Double> findTotalUnpaidAbonnements();
 }

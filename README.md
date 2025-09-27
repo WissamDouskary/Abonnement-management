@@ -24,8 +24,8 @@ L’application est conçue selon une architecture en couches pour garantir la s
 
 - **Couche Présentation (UI/Menu)** : Interface textuelle (console) permettant la navigation et l'interaction avec l'utilisateur.
 - **Couche Métier (Services)** : Logique applicative (génération d’échéances, détection des impayés, rapports financiers).
-- **Couche Entity** : Représentation des objets métiers persistants (`Abonnement`, `Paiement`).
-- **Couche DAO** : Persistance via JDBC et base relationnelle (PostgreSQL ou MySQL), communication avec la base de données.
+- **Couche Entity** : Représentation des objets métiers persistants (`Abonnement`, `Paiement`, `AbonnementAvecEngagement`, `AbonnementSansEngagement`).
+- **Couche DAO** : Persistance via JDBC et base relationnelle (PostgreSQL), communication avec la base de données.
 - **Couche Utilitaire** : Gestion des dates, formatage, validations.
 
 ---
@@ -35,7 +35,7 @@ L’application est conçue selon une architecture en couches pour garantir la s
 ### Couche Entity
 
 - **Abonnement** (classe abstraite)
-    - Attributs : `id` (UUID), `nomService`, `montantMensuel`, `dateDebut`, `dateFin`, `statut` (enum : Active, Suspendu, Résilié)
+    - Attributs : `id` (UUID), `nomService`, `montantMensuel`, `dateDebut`, `dateFin`, `statut`(enum : Active, Suspendu, Résilié), `type`(enum : Avec Engagement, Sans Engagement)
 - **AbonnementAvecEngagement** (hérite de Abonnement)
     - Attribut supplémentaire : `dureeEngagementMois`
 - **AbonnementSansEngagement** (hérite de Abonnement)
@@ -50,8 +50,8 @@ L’application est conçue selon une architecture en couches pour garantir la s
 
 ### Couche DAO (via JDBC)
 
-- **AbonnementDAO** : `create`, `findById`, `findAll`, `update`, `delete`, `findActiveSubscriptions`, `findByType`
-- **PaiementDAO** : `create`, `findById`, `findByAbonnement`, `findAll`, `update`, `delete`, `findUnpaidByAbonnement`, `findLastPayments`
+- **AbonnementDAO** : `create`, `update`, `delete`, `findAll`, `findById`
+- **PaiementDAO** : `create`, `update`, `delete`, `findAll`, `findById`, `findByAbonnementId`, `findTotalUnpaidAbonnement`
 
 ---
 
@@ -89,7 +89,7 @@ L’application est conçue selon une architecture en couches pour garantir la s
 - Génération automatique des échéances
 - Détection des impayés
 - Rapports financiers avec Streams et Collectors
-- Persistance via JDBC (PostgreSQL/MySQL)
+- Persistance via JDBC (PostgreSQL)
 - Architecture en couches (UI, services métier, DAO/repository, utilitaires)
 - Gestion des exceptions (try/catch + messages clairs)
 - Contrôle de version avec Git
@@ -104,22 +104,15 @@ L’application est conçue selon une architecture en couches pour garantir la s
    ```
 
 2. **Configurer la base de données**
-    - Créer une base PostgreSQL ou MySQL
-    - Adapter le fichier de configuration JDBC (`src/main/resources/db.properties`)
+    - Créer une base PostgreSQL
+    - Adapter le fichier de configuration JDBC (`src/config/DBconnection.java`)
 
 3. **Compiler et exécuter**
    ```bash
    mvn clean package
-   java -jar target/Abonnement-management.jar
+   java -jar Abonnement-management.jar
    ```
    ou via IDE (IntelliJ, Eclipse...)
-
----
-
-## Contributions
-
-Les contributions sont les bienvenues !  
-Merci d’ouvrir une issue ou une pull request pour toute suggestion ou amélioration.
 
 ---
 
@@ -159,6 +152,14 @@ Merci d’ouvrir une issue ou une pull request pour toute suggestion ou amélior
 
 ![img.png](imgs/img_7.png)
 
+---
+
+## Contributions
+
+Les contributions sont les bienvenues !  
+Merci d’ouvrir une issue ou une pull request pour toute suggestion ou amélioration.
+
+---
 
 ## Licence
 
