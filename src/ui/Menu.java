@@ -736,7 +736,77 @@ public class Menu {
     }
 
     private void genererRapportFinancier() {
-        System.out.println("Génération d'un rapport financier...");
+        Map<String, Paiement> paiements = paiementService.findAll();
+        Map<String, Abonnement> abonnements = abonnementService.findAllAbonnements();
+
+        System.out.println("=== Génération de Rapports Financiers ===");
+        System.out.println("1. Rapport mensuel");
+        System.out.println("2. Rapport annuel");
+        System.out.println("3. Rapport impayés");
+        System.out.print("Votre choix : ");
+        int choix = saisirChoix();
+
+        switch (choix) {
+            case 1:
+                System.out.print("Entrez l'année : ");
+                int anneeM = scanner.nextInt();
+                System.out.print("Entrez le mois (1-12) : ");
+                int mois = scanner.nextInt();
+
+                double totalPayeM = paiements.values().stream()
+                        .filter(p -> p.getDatePaiement() != null)
+                        .filter(p -> p.getDatePaiement().getYear() == anneeM)
+                        .filter(p -> p.getDatePaiement().getMonthValue() == mois)
+                        .mapToDouble(p -> abonnements.get(p.getIdAbonnement().toString()).getMontantMensuel())
+                        .sum();
+
+                double totalImpayesM = paiements.values().stream()
+                        .filter(p -> p.getDatePaiement() == null)
+                        .filter(p -> p.getDateEcheance().getYear() == anneeM)
+                        .filter(p -> p.getDateEcheance().getMonthValue() == mois)
+                        .mapToDouble(p -> abonnements.get(p.getIdAbonnement().toString()).getMontantMensuel())
+                        .sum();
+
+                System.out.println("=== Rapport Mensuel " + mois + "/" + anneeM + " ===");
+                System.out.println("Total payé   : " + totalPayeM + " DH");
+                System.out.println("Total impayé : " + totalImpayesM + " DH");
+                break;
+
+            case 2:
+                System.out.print("Entrez l'année : ");
+                int annee = scanner.nextInt();
+
+                double totalPayeA = paiements.values().stream()
+                        .filter(p -> p.getDatePaiement() != null)
+                        .filter(p -> p.getDatePaiement().getYear() == annee)
+                        .mapToDouble(p -> abonnements.get(p.getIdAbonnement().toString()).getMontantMensuel())
+                        .sum();
+
+                double totalImpayesA = paiements.values().stream()
+                        .filter(p -> p.getDatePaiement() == null)
+                        .filter(p -> p.getDateEcheance().getYear() == annee)
+                        .mapToDouble(p -> abonnements.get(p.getIdAbonnement().toString()).getMontantMensuel())
+                        .sum();
+
+                System.out.println("=== Rapport Annuel " + annee + " ===");
+                System.out.println("Total payé   : " + totalPayeA + " DH");
+                System.out.println("Total impayé : " + totalImpayesA + " DH");
+                break;
+
+            case 3:
+                double totalImpayes = paiements.values().stream()
+                        .filter(p -> p.getDatePaiement() == null)
+                        .mapToDouble(p -> abonnements.get(p.getIdAbonnement().toString()).getMontantMensuel())
+                        .sum();
+
+                System.out.println("=== Rapport Impayés ===");
+                System.out.println("Montant total impayé : " + totalImpayes + " DH");
+                break;
+
+            default:
+                System.out.println("Choix invalide !");
+                break;
+        }
     }
 
     private void quitter() {
