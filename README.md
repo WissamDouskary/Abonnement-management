@@ -148,12 +148,6 @@ L’application est conçue selon une architecture en couches pour garantir la s
 
 ---
 
-## Planification Jira
-
-![img.png](imgs/img_7.png)
-
----
-
 ## Contributions
 
 Les contributions sont les bienvenues !  
